@@ -153,9 +153,10 @@ svg.i{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.8}
   }
   function viewCard(o){
     var d=o.m===2;
+    var dc=d?"dot red":(o.m===0?"dot green":"dot");
     var sub=d?"示例号码 · 不可拨打":"点击直接拨号";
     return '<div class="card">'+
-      '<div class="eyebrow"><i class="dot'+(d?" red":(o.m===0?" green":""))+'</i>'+
+      '<div class="eyebrow"><i class="'+dc+'"></i>'+
       (d?"示例数据 · 号码不可拨打":"临时停靠 · 扫码提醒车主")+'</div>'+
       '<h1>这辆车挡住了你</h1>'+
       '<div class="plate'+(isNew(o.p)?" new":"")+'">'+esc(o.p)+'</div>'+

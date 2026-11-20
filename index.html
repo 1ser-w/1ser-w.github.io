@@ -1,56 +1,210 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="zh-CN">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>挪车 · 扫码提醒车主</title>
 <meta name="theme-color" content="#0B0F10">
-<title>挪车码</title>
+<meta name="robots" content="noindex,nofollow">
 <style>
-html,body{margin:0;height:100%;background:#0B0F10;color:#F1F3EF}
-#boot{display:grid;place-items:center;height:100%;font:500 14px/1.6 system-ui,-apple-system,"Segoe UI",sans-serif;letter-spacing:.14em;color:#8C9491}
-#boot span{opacity:.9}
-@keyframes breathe{0%,100%{opacity:.35}50%{opacity:1}}
-#boot span{animation:breathe 1.6s ease-in-out infinite}
+:root{
+  --asphalt:#0B0F10;--card:#121718;--white:#F1F3EF;--muted:#8B948F;--line:rgba(241,243,239,.10);
+  --yellow:#E8B24C;--green:#4FBFA6;--red:#DE5C34;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;min-height:100%}
+body{
+  background:
+    radial-gradient(1100px 560px at 50% -12%,rgba(232,178,76,.13),transparent 62%),
+    radial-gradient(760px 480px at 108% 108%,rgba(79,191,166,.09),transparent 60%),
+    var(--asphalt);
+  color:var(--white);
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif;
+  display:flex;flex-direction:column;align-items:center;
+  padding:max(28px,env(safe-area-inset-top)) 16px 32px;
+  -webkit-font-smoothing:antialiased;
+}
+.wrap{width:100%;max-width:420px;display:flex;flex-direction:column;gap:14px}
+.card{
+  position:relative;overflow:hidden;
+  background:linear-gradient(180deg,rgba(241,243,239,.062),rgba(241,243,239,.022));
+  border:1px solid var(--line);border-radius:22px;
+  padding:22px 20px;
+  box-shadow:0 22px 50px -26px #000,inset 0 1px 0 rgba(241,243,239,.06);
+}
+.card::after{content:"";position:absolute;inset:0;pointer-events:none;
+  background:repeating-linear-gradient(180deg,rgba(241,243,239,.028) 0 1px,transparent 1px 3px);opacity:.35}
+.eyebrow{display:flex;align-items:center;gap:8px;font-size:11px;letter-spacing:.16em;
+  text-transform:uppercase;color:var(--muted)}
+.dot{width:6px;height:6px;border-radius:50%;background:var(--yellow);box-shadow:0 0 10px rgba(232,178,76,.7)}
+.dot.red{background:var(--red);box-shadow:0 0 10px rgba(222,92,52,.7)}
+.dot.green{background:var(--green);box-shadow:0 0 10px rgba(79,191,166,.7)}
+h1{margin:12px 0 0;font-size:22px;line-height:1.34;font-weight:650;letter-spacing:.01em}
+p.lead{margin:12px 0 0;font-size:13.5px;line-height:1.7;color:var(--muted)}
+.plate{
+  display:inline-flex;align-items:center;justify-content:center;margin-top:16px;
+  padding:11px 18px;border-radius:11px;font-size:22px;font-weight:750;letter-spacing:.1em;
+  font-family:ui-monospace,SFMono-Regular,Consolas,"Courier New",monospace;
+  color:#F3F6F8;background:linear-gradient(158deg,#153A66,#0C2340);
+  border:1px solid #2E5F94;box-shadow:inset 0 1px 0 rgba(255,255,255,.16),0 10px 24px -14px #000;
+}
+.plate.new{background:linear-gradient(158deg,#1E5B45,#0F3527);border-color:#2F7A5D}
+.actions{margin-top:22px;display:flex;flex-direction:column;gap:10px}
+.btn{
+  display:flex;align-items:center;gap:13px;width:100%;cursor:pointer;
+  padding:13px 14px;border-radius:16px;text-align:left;
+  background:rgba(241,243,239,.045);border:1px solid rgba(241,243,239,.11);color:var(--white);
+  font:inherit;transition:transform .16s ease,background .16s ease,border-color .16s ease;
+}
+.btn:active{transform:scale(.985);background:rgba(241,243,239,.085)}
+.btn .ico{width:38px;height:38px;flex:0 0 38px;border-radius:12px;display:grid;place-items:center;
+  background:linear-gradient(160deg,rgba(232,178,76,.22),rgba(232,178,76,.07));
+  border:1px solid rgba(232,178,76,.28);color:var(--yellow)}
+.btn.sms .ico{background:linear-gradient(160deg,rgba(79,191,166,.2),rgba(79,191,166,.06));
+  border-color:rgba(79,191,166,.3);color:var(--green)}
+.btn .txt{flex:1;min-width:0}
+.btn strong{display:block;font-size:15px;font-weight:640;letter-spacing:.01em}
+.btn span{display:block;margin-top:3px;font-size:12px;color:var(--muted)}
+.btn .go{color:var(--muted);display:grid;place-items:center}
+.btn[disabled]{opacity:.5;cursor:not-allowed}
+.note{margin-top:18px;padding-top:16px;border-top:1px dashed rgba(241,243,239,.12);
+  font-size:12px;line-height:1.7;color:var(--muted)}
+.steps{margin:16px 0 0;padding:0;list-style:none;display:flex;flex-direction:column;gap:10px}
+.steps li{display:flex;gap:10px;font-size:13px;line-height:1.65;color:var(--muted)}
+.steps b{width:20px;height:20px;flex:0 0 20px;border-radius:50%;display:grid;place-items:center;
+  font-size:11px;font-weight:700;color:var(--yellow);border:1px solid rgba(232,178,76,.3)}
+.link{display:inline-block;margin-top:18px;font-size:12.5px;color:var(--green);text-decoration:none;
+  border-bottom:1px solid rgba(79,191,166,.35);padding-bottom:2px;background:none;border-top:0;border-left:0;border-right:0;cursor:pointer;font-family:inherit}
+.foot{width:100%;max-width:420px;margin-top:18px;text-align:center;font-size:11px;line-height:1.8;color:#6C756F}
+.toast{position:fixed;left:50%;bottom:28px;transform:translate(-50%,20px);opacity:0;pointer-events:none;
+  background:rgba(18,23,24,.94);border:1px solid var(--line);color:var(--white);
+  padding:10px 16px;border-radius:12px;font-size:12.5px;transition:.22s ease;z-index:9}
+.toast.on{opacity:1;transform:translate(-50%,0)}
+svg.i{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.8}
 </style>
 </head>
 <body>
-<div id="boot"><span>正在载入</span></div>
+<main class="wrap" id="app"></main>
+<div class="foot">熟客挪车码 · 不显示号码，不做统计<br>本页只做一次拨号或一次短信跳转</div>
+<div class="toast" id="toast"></div>
 <script>
-(function () {
-  function b64ToText(b64) {
-    var raw = atob(b64.replace(/\s+/g, ''));
-    var bytes = new Uint8Array(raw.length);
-    for (var i = 0; i < raw.length; i++) bytes[i] = raw.charCodeAt(i);
-    if (typeof DecompressionStream === 'undefined') {
-      throw new Error('no-decompression');
-    }
-    var stream = new Blob([bytes]).stream().pipeThrough(new DecompressionStream('gzip'));
-    return new Response(stream).text();
+(function(){
+  "use strict";
+  var KEY="nuoche::parking::2026::v3";
+  var SMS_DEFAULT="您好，您的车挡住了我，麻烦您挪一下，谢谢。";
+  var app=document.getElementById("app");
+  var toastEl=document.getElementById("toast");
+  var phone="",tpl=SMS_DEFAULT,demo=false;
+
+  function shift(u8){for(var i=0;i<u8.length;i++){u8[i]=u8[i]^KEY.charCodeAt(i%KEY.length);}return u8;}
+  function unpack(tok){
+    if(!tok)return null;
+    try{
+      var b=tok.replace(/-/g,"+").replace(/_/g,"/");
+      while(b.length%4){b+="=";}
+      var bin=atob(b),u8=new Uint8Array(bin.length),i;
+      for(i=0;i<bin.length;i++){u8[i]=bin.charCodeAt(i);}
+      return JSON.parse(new TextDecoder().decode(shift(u8)));
+    }catch(e){return null;}
   }
-  function grab(url) {
-    return fetch(url, { cache: 'force-cache' }).then(function (r) {
-      if (!r.ok) throw new Error('fetch-fail:' + url + ':' + r.status);
-      return r.text();
-    }).then(b64ToText);
+  function pack(o){
+    var u8=shift(new TextEncoder().encode(JSON.stringify(o))),out="",i;
+    for(i=0;i<u8.length;i++){out+=String.fromCharCode(u8[i]);}
+    return btoa(out).replace(/\+/g,"-").replace(/\//g,"_").replace(/=+$/,"");
   }
-  boot: {
-    try {
-      grab('./data/lib.b64').then(function (code) {
-        (0, eval)(code);
-        return grab('./data/page.b64');
-      }).then(function (html) {
-        document.open();
-        document.write(html);
-        document.close();
-      }).catch(function (e) {
-        var b = document.getElementById('boot');
-        if (b) b.innerHTML = '<span style="animation:none">页面载入失败，请刷新重试</span>';
-      });
-    } catch (e) {
-      var b2 = document.getElementById('boot');
-      if (b2) b2.innerHTML = '<span style="animation:none">当前浏览器不支持，请换用新版浏览器</span>';
-    }
+  function esc(s){return String(s==null?"":s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");}
+  function p2(n){return n<10?"0"+n:""+n;}
+  function fmtTime(ts){var d=new Date(ts);return d.getFullYear()+"-"+p2(d.getMonth()+1)+"-"+p2(d.getDate())+" "+p2(d.getHours())+":"+p2(d.getMinutes());}
+  function isNew(p){return String(p||"").replace(/[·\-\s*]/g,"").length>=8;}
+  var I={
+    phone:'<svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M6.5 3.5h3l1.5 4-2 1.5a12 12 0 0 0 6 6l1.5-2 4 1.5v3a2 2 0 0 1-2 2A17 17 0 0 1 4.5 5.5a2 2 0 0 1 2-2Z"/></svg>',
+    sms:'<svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5.5h16v11H9l-5 4Z"/><path d="M8 9.5h8M8 13h5"/></svg>',
+    chev:'<svg class="i" viewBox="0 0 24 24" aria-hidden="true" style="stroke-width:2"><path d="M9 6l6 6-6 6"/></svg>'
+  };
+  var toastTimer=0;
+  function toast(m){
+    toastEl.textContent=m;toastEl.classList.add("on");
+    clearTimeout(toastTimer);toastTimer=setTimeout(function(){toastEl.classList.remove("on");},2200);
   }
+
+  function viewEmpty(){
+    return '<div class="card">'+
+      '<div class="eyebrow"><i class="dot"></i>扫码挪车</div>'+
+      '<h1>请用手机扫描<br>车上的挪车码</h1>'+
+      '<p class="lead">这个页面需要带上二维码里的信息，才能显示车牌并联系车主。直接打开首页看不到任何人的号码。</p>'+
+      '<ul class="steps">'+
+      '<li><b>1</b><span>找到挡风玻璃上的挪车码</span></li>'+
+      '<li><b>2</b><span>用相机或微信扫一扫</span></li>'+
+      '<li><b>3</b><span>在本页点「电话通知」或「短信通知」</span></li>'+
+      '</ul>'+
+      '<button class="link" id="demo">看看示例页面</button>'+
+      '<div class="note">页面上不显示任何号码；点一下直接拨通，车主也看不到你的号码。</div>'+
+      '</div>';
+  }
+  function viewBroken(){
+    return '<div class="card"><div class="eyebrow"><i class="dot red"></i>无法识别</div>'+
+      '<h1>二维码内容不完整</h1><p class="lead">链接可能被截断，请让车主重新生成一张。</p></div>';
+  }
+  function viewExpired(o){
+    return '<div class="card"><div class="eyebrow"><i class="dot red"></i>这张挪车码已失效</div>'+
+      '<h1>提醒通道已关闭</h1>'+
+      '<div class="plate'+(isNew(o.p)?" new":"")+'">'+esc(o.p)+'</div>'+
+      '<p class="lead">有效期到 '+(o.x?fmtTime(o.x):"—")+'，现在无法从这里发起提醒。可询问现场管理人员，或拨打 114 挪车服务。</p></div>';
+  }
+  function viewCard(o){
+    var d=o.m===2;
+    var sub=d?"示例号码 · 不可拨打":"点击直接拨号";
+    return '<div class="card">'+
+      '<div class="eyebrow"><i class="dot'+(d?" red":(o.m===0?" green":""))+'</i>'+
+      (d?"示例数据 · 号码不可拨打":"临时停靠 · 扫码提醒车主")+'</div>'+
+      '<h1>这辆车挡住了你</h1>'+
+      '<div class="plate'+(isNew(o.p)?" new":"")+'">'+esc(o.p)+'</div>'+
+      '<p class="lead">'+(d?"这张码是用来预览界面的，号码随机生成，打不通也收不到短信。":"两个按钮任选其一，接通后车主看不到你的号码。")+'</p>'+
+      '<div class="actions">'+
+      '<button class="btn" data-act="call"'+(d?" disabled":"")+'><span class="ico">'+I.phone+'</span>'+
+      '<span class="txt"><strong>电话通知</strong><span>'+esc(sub)+'</span></span><span class="go">'+I.chev+'</span></button>'+
+      '<button class="btn sms" data-act="sms"'+(d?" disabled":"")+'><span class="ico">'+I.sms+'</span>'+
+      '<span class="txt"><strong>短信通知</strong><span>内容已预填，可直接发送</span></span><span class="go">'+I.chev+'</span></button>'+
+      '</div>'+
+      '<div class="note">'+(d?"示例页的两个按钮已禁用。真实场景请让车主填一个能打通的中间号。":"本页不显示车主号码，也不会记录你的号码。")+'</div>'+
+      '</div>';
+  }
+
+  function init(tok){
+    phone="";tpl=SMS_DEFAULT;demo=false;
+    if(!tok){app.innerHTML=viewEmpty();bindDemo();return;}
+    var o=unpack(tok);
+    if(!o||!o.p){app.innerHTML=viewBroken();return;}
+    phone=o.c||"";tpl=o.t||SMS_DEFAULT;demo=o.m===2;
+    if(o.x&&Date.now()>o.x){app.innerHTML=viewExpired(o);return;}
+    app.innerHTML=viewCard(o);
+  }
+  function bindDemo(){
+    var b=document.getElementById("demo");
+    if(!b)return;
+    b.onclick=function(){
+      location.hash="#/scan?d="+pack({p:"粤B·D12345",c:"4001234567",t:SMS_DEFAULT,x:0,m:2});
+    };
+  }
+  app.addEventListener("click",function(e){
+    var el=e.target.closest?e.target.closest("[data-act]"):null;
+    if(!el)return;
+    var act=el.getAttribute("data-act");
+    if(demo){toast("示例号码，不能拨打");return;}
+    if(!phone){toast("这张码里没有号码");return;}
+    if(act==="call"){location.href="tel:"+phone;return;}
+    location.href="sms:"+phone+"?body="+encodeURIComponent(tpl);
+  });
+
+  function tokFromUrl(){
+    var h=(location.hash||"").replace(/^#/,"");
+    var qi=h.indexOf("?");
+    var q=qi>=0?h.slice(qi+1):location.search.replace(/^\?/,"");
+    try{return new URLSearchParams(q).get("d")||"";}catch(err){return "";}
+  }
+  function boot(){init(tokFromUrl());}
+  window.addEventListener("hashchange",boot);
+  boot();
 })();
 </script>
 </body>
